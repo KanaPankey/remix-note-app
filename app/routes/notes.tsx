@@ -1,9 +1,9 @@
-import { ActionFunctionArgs } from '@remix-run/node';
+import { ActionFunctionArgs, json } from '@remix-run/node';
 import { redirect } from 'react-router';
 import NoteList, { links as noteListLinks } from '~/components/NoteList';
 import NewNote, { links as newNoteLinks } from '~/components/NewNote';
 import { getStoredNotes, storeNotes } from '~/data/notes';
-import { useLoaderData } from '@remix-run/react';
+import { isRouteErrorResponse, useLoaderData, useRouteError } from '@remix-run/react';
 
 
 export default function NotesPage() {
@@ -19,6 +19,9 @@ export default function NotesPage() {
 
 export async function loader() {
   const notes = await getStoredNotes();
+  if (!notes || notes.length === 0) {
+    throw new Response('No notes found', {status: 404});
+  }
   return notes;
 }
 
@@ -45,4 +48,31 @@ export async function action ({request}: ActionFunctionArgs) {
 
 export function links() {
   return [...newNoteLinks(), ...noteListLinks()];
+}
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+    // TODO: Make this more readable by pulling out double ternary into a function
+    return (
+      <html lang="en">
+        <head>
+          <title>An error occurred!</title>
+        </head>
+        <body className='error'>
+          <NewNote />
+          <h1>An error occurred in notes!</h1>
+          {isRouteErrorResponse(error) ? (
+            <p>{error.data}</p>
+          ) : error instanceof Error ? (
+            <p>{error.message}</p>
+          ) : (
+            <p>Unknown error</p>
+          )}
+        </body>
+      </html>
+    );
+}
+
+function useCatch() {
+  throw new Error('Function not implemented.');
 }
