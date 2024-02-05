@@ -33,4 +33,10 @@ export function links() {
   return [{rel: 'stylesheet', href: styles}];
 }
 
+export function meta(args: {data: NoteType}) {
+  return [
+    {title: args.data.title},
+  ];
+}
+
 type NoteType = {id: string, title: string, content: string};
